@@ -1,5 +1,4 @@
 from node import Node
-from collections import OrderedDict
 
 
 class Graph:

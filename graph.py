@@ -137,12 +137,13 @@ class Graph:
         {'b': 5}
         >>> graph.add_connection('b', 'a', weight=5)
         >>> graph.nodes
-        {'a': <Node with 1 edges>, 'b': <Node with 0 edges>}
+        {'a': <Node with 1 edges>, 'b': <Node with 1 edges>}
         >>> graph.nodes['b'].edges
-        {'a': 10}
+        {'a': 5}
         >>> graph = Graph()
         >>> graph.add_nodes(names=['a', 'b'])
         >>> graph.add_connection('a', 'b', bi_directional=True, weight=5)
+        >>> graph.nodes
         {'a': <Node with 1 edges>, 'b': <Node with 1 edges>}
         >>> graph.nodes['b'].edges
         {'a': 5}

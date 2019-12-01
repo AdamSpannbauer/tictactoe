@@ -59,9 +59,6 @@ class Node:
         >>> a.edges
         {'b': 10}
         >>> # a.add_connections(names=['b'], weights=[5], on_conflict='fail')
-        Traceback (most recent call last):
-          File "<input>", line 1, in <module>
-          File "<input>", line 51, in add_connections
         KeyError: 'Connection already exists'
         """
         if weights is None:

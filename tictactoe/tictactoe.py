@@ -146,7 +146,7 @@ class TicTacToe:
 
     @staticmethod
     def _get_player_location_gui():
-        NotImplementedError('Comeback later...')
+        raise NotImplementedError('Comeback later...')
 
     def _get_player_location(self):
         if self.cli:
@@ -216,13 +216,15 @@ class TicTacToe:
 
             self.place_piece(value, position)
 
-    def cpu_place_piece(self, value):
+    def cpu_place_piece(self, value, difficulty=100):
         """Have a CPU player place a piece
 
         If ai has not been trained then this is equivalent to TicTacToe.place_random_piece().
         Train with TicTacToe.train_cpu().
 
         :param value: value of piece for CPU to place
+        :param difficulty: influence the chance of playing a random move to adjust cpu play;
+                           chance of random move will be (100 - difficulty)%
 
         >>> np.random.seed(42)
         >>> ttt = TicTacToe()
@@ -233,6 +235,11 @@ class TicTacToe:
                [0, 0, 0],
                [0, 2, 0]])
         """
+        random_move_percent = 1 - difficulty / 100
+        if np.random.random() <= random_move_percent:
+            self.place_random_piece(value=value)
+            return
+
         current_board = self.flat_board
         fp_board = first_person_board(current_board, value)
         sp_board = second_person_board(current_board, value)
@@ -328,7 +335,7 @@ class TicTacToe:
         pbar.close()
         self.reset_game()
 
-    def _play_cli(self):
+    def _play_cli(self, cpu_difficulty=100):
         msg = '\nWhich piece would you like to be?\n(X or O; Xs will play first):\n'
         player_piece = input(msg).strip().upper()
         cpu_piece = 'O'
@@ -343,7 +350,7 @@ class TicTacToe:
         cpu_piece = self._piece_map[cpu_piece]
 
         turn_actions = {
-            cpu_piece: lambda: self.cpu_place_piece(cpu_piece),
+            cpu_piece: lambda: self.cpu_place_piece(cpu_piece, difficulty=cpu_difficulty),
             player_piece: lambda: self.place_piece(player_piece, position=None),
         }
 
@@ -373,12 +380,12 @@ class TicTacToe:
 
     @staticmethod
     def _play_gui():
-        NotImplementedError('Come back later...')
+        raise NotImplementedError('Come back later...')
 
-    def play(self, cli=True):
+    def play(self, cpu_difficulty=100, cli=True):
         self.cli = cli
         if cli:
-            self._play_cli()
+            self._play_cli(cpu_difficulty=cpu_difficulty)
         else:
             self._play_gui()
 

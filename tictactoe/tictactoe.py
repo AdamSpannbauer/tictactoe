@@ -1,4 +1,6 @@
+import os
 import time
+import pickle
 import numpy as np
 from tqdm import tqdm
 from .board_utils import flatten_board, first_person_board, second_person_board, board_diff
@@ -381,7 +383,7 @@ class TicTacToe:
         while True:
             play_again = input('\nPlay again? (y or n): ').upper() == 'Y'
             if play_again:
-                ttt.play()
+                self.play()
             else:
                 break
 
@@ -389,14 +391,32 @@ class TicTacToe:
     def _play_gui():
         raise NotImplementedError('Come back later...')
 
-    def play(self, cpu_difficulty=100, cli=True):
+    def play(self, cpu_difficulty=100, use_saved_knowledge=True,
+             knowledge='cpu_knowledge.pickle', train_n_games=0, cli=True):
         """Play User vs CPU game(s) of TicTacToe
 
         :param cpu_difficulty: influence the chance of the CPU playing a random move to adjust CPU difficulty;
                                chance of random move will be (100 - cpu_difficulty)%
+        :param use_saved_knowledge: Should knowledge be read/saved to pickled file?
+        :param knowledge: Path to pickled file to read/save for CPU's knowledge.
+                          Ignored if use_saved_knowledge is False
+        :param train_n_games: Number of games to add to CPU knowledge before playing User.
         :param cli: Should command line interface be used?
         :return: None
         """
+        # Read saved knowledge if it exists
+        if use_saved_knowledge and os.path.exists(knowledge):
+            with open(knowledge, 'rb') as f:
+                self.cpu_knowledge = pickle.load(f)
+
+        if train_n_games > 0:
+            self.train_cpu(train_n_games)
+
+            # Save what CPU learned
+            if use_saved_knowledge:
+                with open(knowledge, 'wb') as f:
+                    pickle.dump(self.cpu_knowledge, f, protocol=pickle.HIGHEST_PROTOCOL)
+
         self.cli = cli
         if cli:
             self._play_cli(cpu_difficulty=cpu_difficulty)

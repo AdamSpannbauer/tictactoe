@@ -1,8 +1,8 @@
 import time
 import numpy as np
 from tqdm import tqdm
-import board_utils
-from graph import Graph
+from .board_utils import flatten_board, first_person_board, second_person_board, board_diff
+from .graph import Graph
 
 
 class TicTacToe:
@@ -69,7 +69,7 @@ class TicTacToe:
         >>> ttt.flat_board
         '000000000'
         """
-        return board_utils.flatten_board(self)
+        return flatten_board(self)
 
     def reset_game(self, reset_cpu_knowledge=False):
         """Clear board"""
@@ -234,8 +234,8 @@ class TicTacToe:
                [0, 2, 0]])
         """
         current_board = self.flat_board
-        fp_board = board_utils.first_person_board(current_board, value)
-        sp_board = board_utils.second_person_board(current_board, value)
+        fp_board = first_person_board(current_board, value)
+        sp_board = second_person_board(current_board, value)
         try:
             edges = self.cpu_knowledge.nodes[sp_board].edges
         # If move never seen before in knowledge
@@ -247,7 +247,7 @@ class TicTacToe:
         edges = {k: v for k, v in edges.items() if v > 0}
         best_moves = sorted(edges, key=edges.get)
         for move in best_moves:
-            position = board_utils.board_diff(fp_board, move)
+            position = board_diff(fp_board, move)
             try:
                 self.place_piece(value=value, position=position)
                 return
@@ -291,8 +291,8 @@ class TicTacToe:
             # Store move for player of interest
             # Example: game_knowledge[0].add_nodes(names=['000000000'], edges=[{'000000001': 0}])
             game_knowledge[player - 1].add_nodes(
-                [board_utils.second_person_board(prev_move, player)],
-                [{board_utils.first_person_board(current_move, player): 0}]
+                [second_person_board(prev_move, player)],
+                [{first_person_board(current_move, player): 0}]
             )
 
             # Change to other player's turn
@@ -364,7 +364,14 @@ class TicTacToe:
             display_winner = 'No one'
         print(f'Game Over. {display_winner} wins.')
 
-        ttt.reset_game()
+        self.reset_game()
+
+        while True:
+            play_again = input('\nPlay again? (y or n): ').upper() == 'Y'
+            if play_again:
+                ttt.play()
+            else:
+                break
 
     @staticmethod
     def _play_gui():
@@ -382,10 +389,3 @@ if __name__ == '__main__':
     ttt = TicTacToe()
     ttt.train_cpu(100)
     ttt.play()
-
-    while True:
-        play_again = input('\nPlay again? (y or n): ').upper() == 'Y'
-        if play_again:
-            ttt.play()
-        else:
-            break

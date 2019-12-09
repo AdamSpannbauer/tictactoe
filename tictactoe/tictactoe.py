@@ -243,9 +243,7 @@ class TicTacToe:
             self.place_random_piece(value=value)
             return
 
-        # Remove negatively weighted moves
-        edges = {k: v for k, v in edges.items() if v > 0}
-        best_moves = sorted(edges, key=edges.get)
+        best_moves = sorted(edges.keys(), key=lambda x: -edges[x])
         for move in best_moves:
             position = board_diff(fp_board, move)
             try:

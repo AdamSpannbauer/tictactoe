@@ -140,6 +140,7 @@ class TicTacToe:
 
     @staticmethod
     def _get_player_location_cli():
+        """Prompt user for x,y location to place piece by input()"""
         msg = '\n(x, y) location to place piece?\n(format as x,y where x and y are [0-3] representing col,row):\n'
         input_loc = input(msg)
         return (int(v) for v in input_loc.split(','))
@@ -149,6 +150,7 @@ class TicTacToe:
         raise NotImplementedError('Comeback later...')
 
     def _get_player_location(self):
+        """Prompt user for x,y location to place piece"""
         if self.cli:
             return self._get_player_location_cli()
         else:
@@ -223,7 +225,7 @@ class TicTacToe:
         Train with TicTacToe.train_cpu().
 
         :param value: value of piece for CPU to place
-        :param difficulty: influence the chance of playing a random move to adjust cpu play;
+        :param difficulty: influence the chance of the CPU playing a random move to adjust CPU difficulty;
                            chance of random move will be (100 - difficulty)%
 
         >>> np.random.seed(42)
@@ -336,6 +338,11 @@ class TicTacToe:
         self.reset_game()
 
     def _play_cli(self, cpu_difficulty=100):
+        """Play User vs CPU game(s) of TicTacToe via CLI
+
+        :param cpu_difficulty: influence the chance of the CPU playing a random move to adjust CPU difficulty;
+                               chance of random move will be (100 - cpu_difficulty)%
+        """
         msg = '\nWhich piece would you like to be?\n(X or O; Xs will play first):\n'
         player_piece = input(msg).strip().upper()
         cpu_piece = 'O'
@@ -383,6 +390,13 @@ class TicTacToe:
         raise NotImplementedError('Come back later...')
 
     def play(self, cpu_difficulty=100, cli=True):
+        """Play User vs CPU game(s) of TicTacToe
+
+        :param cpu_difficulty: influence the chance of the CPU playing a random move to adjust CPU difficulty;
+                               chance of random move will be (100 - cpu_difficulty)%
+        :param cli: Should command line interface be used?
+        :return: None
+        """
         self.cli = cli
         if cli:
             self._play_cli(cpu_difficulty=cpu_difficulty)

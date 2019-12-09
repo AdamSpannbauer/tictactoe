@@ -1,10 +1,14 @@
+import time
 import numpy as np
+from tqdm import tqdm
 import board_utils
 from graph import Graph
 
 
 class TicTacToe:
-    """Play tic-tac-toe with 1s and 2s instead of Xs and Os"""
+    """Play tic-tac-toe with a CPU"""
+    _piece_map = {'X': 1, 'O': 2, 1: 'X', 2: 'O'}
+
     def __init__(self, cpu_knowledge=None):
         self.board = np.array([[0, 0, 0],
                                [0, 0, 0],
@@ -15,11 +19,43 @@ class TicTacToe:
         self.last_played_loc = None
         self.cpu_knowledge = Graph() if cpu_knowledge is None else cpu_knowledge
 
+        self.cli = True
+
     def __repr__(self):
         return self.board.__repr__()
 
     def __str__(self):
-        return self.board.__str__()
+        """Convert numpy array of 0s, 1s, & 2s into a display with Xs and 0s
+
+        Example not run as doctest cause i didnt want to deal with the whitespace
+        # >>> ttt = TicTacToe()
+        # >>> print(ttt)
+           |   |
+        ---|---|---
+           |   |
+        ---|---|---
+           |   |
+        """
+        display = ''
+        for row in range(3):
+            display += '\n'
+            for col in range(3):
+                value = self.board[row, col]
+                if not value == 0:
+                    piece = ' ' + self._piece_map[value] + ' '
+                else:
+                    piece = '   '
+
+                if col == 1:
+                    piece = '|' + piece + '|'
+
+                display += piece
+
+            display += '\n'
+            if row < 2:
+                display += '---|---|---'
+
+        return display
 
     @property
     def flat_board(self):
@@ -102,11 +138,29 @@ class TicTacToe:
 
         return 0
 
-    def place_piece(self, value, position):
+    @staticmethod
+    def _get_player_location_cli():
+        msg = '\n(x, y) location to place piece?\n(format as x,y where x and y are [0-3] representing col,row):\n'
+        input_loc = input(msg)
+        return (int(v) for v in input_loc.split(','))
+
+    @staticmethod
+    def _get_player_location_gui():
+        NotImplementedError('Comeback later...')
+
+    def _get_player_location(self):
+        if self.cli:
+            return self._get_player_location_cli()
+        else:
+            return self._get_player_location_gui()
+
+    def place_piece(self, value, position=None):
         """Place a piece at given coords
 
         :param value: value of piece to place (either 1 or 2)
-        :param position: coordinates to place piece as (x, y) on zero indexed 2d grid
+        :param position: coordinates to place piece as (x, y) on zero indexed 2d grid;
+                         if None then position will be prompted via input() if self.cli is True
+
 
         >>> ttt = TicTacToe()
         >>> ttt.place_piece(1, (0, 0))
@@ -122,6 +176,9 @@ class TicTacToe:
         """
         if self.game_is_over:
             raise ValueError('Game is over.')
+
+        if position is None:
+            position = self._get_player_location()
 
         x, y = position
         if self.board[y, x] == 0:
@@ -220,7 +277,8 @@ class TicTacToe:
         # Player 1 will start
         player = 1
         count = 0
-        while count <= n_rounds:
+        pbar = tqdm(desc='Training', total=n_rounds)
+        while count < n_rounds:
             prev_move = self.flat_board
             # Place piece
             # Randomly decide to ignore knowledge and place randomly
@@ -243,6 +301,7 @@ class TicTacToe:
             # Consolidate knowledge after round
             if self.game_is_over:
                 count += 1
+                pbar.update(1)
                 if self.winner is not 0:  # 0 means a tie
                     winning_ind = self.winner - 1
                     winning_moves = game_knowledge[winning_ind]
@@ -268,11 +327,65 @@ class TicTacToe:
                 game_knowledge = [Graph(), Graph()]
                 player = 1
 
+        pbar.close()
         self.reset_game()
+
+    def _play_cli(self):
+        msg = '\nWhich piece would you like to be?\n(X or O; Xs will play first):\n'
+        player_piece = input(msg).strip().upper()
+        cpu_piece = 'O'
+
+        if player_piece in ['O', '0']:
+            player_piece = 'O'
+            cpu_piece = 'X'
+        elif player_piece is not 'X':
+            ValueError('Bad piece selection.')
+
+        player_piece = self._piece_map[player_piece]
+        cpu_piece = self._piece_map[cpu_piece]
+
+        turn_actions = {
+            cpu_piece: lambda: self.cpu_place_piece(cpu_piece),
+            player_piece: lambda: self.place_piece(player_piece, position=None),
+        }
+
+        turn = 1
+        next_turn = {1: 2, 2: 1}
+        while not self.game_is_over:
+            turn_actions[turn]()
+            print(f'\n{self._piece_map[turn]} played:')
+            print(self)
+            turn = next_turn[turn]
+            time.sleep(0.3)
+
+        try:
+            display_winner = self._piece_map[self.winner]
+        except KeyError:
+            display_winner = 'No one'
+        print(f'Game Over. {display_winner} wins.')
+
+        ttt.reset_game()
+
+    @staticmethod
+    def _play_gui():
+        NotImplementedError('Come back later...')
+
+    def play(self, cli=True):
+        self.cli = cli
+        if cli:
+            self._play_cli()
+        else:
+            self._play_gui()
 
 
 if __name__ == '__main__':
     ttt = TicTacToe()
-    print(ttt.cpu_knowledge)
     ttt.train_cpu(100)
-    print(ttt.cpu_knowledge)
+    ttt.play()
+
+    while True:
+        play_again = input('\nPlay again? (y or n): ').upper() == 'Y'
+        if play_again:
+            ttt.play()
+        else:
+            break

@@ -1,5 +1,3 @@
-import os
-import pickle
 import argparse
 from .tictactoe import TicTacToe
 

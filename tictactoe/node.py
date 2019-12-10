@@ -52,6 +52,7 @@ class Node:
         >>> a = Node('a', edges={'b': 0})
         >>> a.edges
         {'b': 0}
+        >>> # noinspection PyTypeChecker
         >>> a.add_connections(names=['b'], weights=[5], on_conflict='overwrite')
         >>> a.edges
         {'b': 5}

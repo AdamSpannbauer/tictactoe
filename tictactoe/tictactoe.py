@@ -9,7 +9,14 @@ from .graph import Graph
 
 class TicTacToe:
     """Play tic-tac-toe with a CPU"""
-    _piece_map = {'X': 1, 'O': 2, 1: 'X', 2: 'O'}
+    _piece_map = {'X': 1, 'O': 2, ' ': 0,
+                  1: 'X', 2: 'O', 0: ' '}
+
+    _num_board = ' 1 | 2 | 3\n'\
+                 '---|---|---\n'\
+                 ' 4 | 5 | 6\n'\
+                 '---|---|---\n'\
+                 ' 7 | 8 | 9\n'
 
     def __init__(self, cpu_knowledge=None):
         self.board = np.array([[0, 0, 0],
@@ -38,26 +45,24 @@ class TicTacToe:
         ---|---|---
            |   |
         """
-        display = ''
+        display = self._num_board
+        i = 1
         for row in range(3):
-            display += '\n'
             for col in range(3):
-                value = self.board[row, col]
-                if not value == 0:
-                    piece = ' ' + self._piece_map[value] + ' '
-                else:
-                    piece = '   '
+                piece = self.board[row, col]
+                piece = self._piece_map[piece]
 
-                if col == 1:
-                    piece = '|' + piece + '|'
-
-                display += piece
-
-            display += '\n'
-            if row < 2:
-                display += '---|---|---'
+                display = display.replace(str(i), piece)
+                i += 1
 
         return display
+
+    @staticmethod
+    def num_2_coords(num):
+        col = int((num - 0.1) / 3)
+        row = (num - 1) % 3
+
+        return row, col
 
     @property
     def flat_board(self):
@@ -140,12 +145,14 @@ class TicTacToe:
 
         return 0
 
-    @staticmethod
-    def _get_player_location_cli():
+    def _get_player_location_cli(self):
         """Prompt user for x,y location to place piece by input()"""
-        msg = '\n(x, y) location to place piece?\n(format as x,y where x and y are [0-3] representing col,row):\n'
+        msg = '\nWhere to place piece?\n(choose number 1-9):'
+        if self.board.sum() == 0:
+            msg += f'\n\n{self._num_board}\nSelection:'
+
         input_loc = input(msg)
-        return (int(v) for v in input_loc.split(','))
+        return int(input_loc.strip())
 
     @staticmethod
     def _get_player_location_gui():
@@ -154,9 +161,14 @@ class TicTacToe:
     def _get_player_location(self):
         """Prompt user for x,y location to place piece"""
         if self.cli:
-            return self._get_player_location_cli()
+            num = self._get_player_location_cli()
         else:
-            return self._get_player_location_gui()
+            num = self._get_player_location_gui()
+
+        if num not in list(range(1, 10)):
+            raise ValueError('Invalid location.')
+
+        return self.num_2_coords(num)
 
     def place_piece(self, value, position=None):
         """Place a piece at given coords
